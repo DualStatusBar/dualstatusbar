@@ -1,1 +1,137 @@
+#!/sbin/sh
 
+#################
+# Initialization
+#################
+
+umask 022
+
+# echo before loading util_functions
+ui_print() { echo " " ; }
+
+require_new_magisk() {
+  ui_print "*******************************"
+  ui_print " Please install Magisk v20.4+! "
+  ui_print "*******************************"
+  exit 1
+}
+
+#########################
+# Load util_functions.sh
+#########################
+
+OUTFD=$2
+ZIPFILE=$3
+
+mount /data 2>/dev/null
+
+[ -f /data/adb/magisk/util_functions.sh ] || require_new_magisk
+. /data/adb/magisk/util_functions.sh
+[ $MAGISK_VER_CODE -lt 20400 ] && require_new_magisk
+
+if ! $BOOTMODE; then
+ui_print " " 
+  ui_print "This is magisk module" 
+  ui_print "You need to flash in magisk to make it work" 
+  ui_print "Only Uninstalling is supported in recovery" 
+  ui_print " " 
+  ui_print "- Uninstalling now...... "
+  ui_print " " 
+  rm -rf /data/adb/modules_update/DSB 2>/dev/null
+  rm -rf /data/adb/modules/DSB 2>/dev/null
+  ui_print " Uninstall successful" 
+  exit 0
+fi
+
+remove()
+{
+rm -rf /data/adb/modules_update/DSB 2>/dev/null
+  rm -rf /data/adb/modules/DSB 2>/dev/null 
+}
+echo " *******************************************************" 
+echo " Module Template by @Jai_08 // @cool_modules" 
+#Do not remove credit if you are using part of this template.
+echo " MMT EX by Zackptg5  " 
+echo " *******************************************************" 
+install_module
+tar -xf $MODPATH/utils/myutils -C $MODPATH/utils/ 2>/dev/null
+zipp=$MODPATH/utils/zip
+zipa=$MODPATH/utils/zipalign
+file=$MODPATH/jai/SystemUI.apk
+apath=$MODPATH/j1/SystemUI
+bpath=$MODPATH/j2/SystemUI
+spath=/system/system_ext/priv-app/SystemUI
+mp=/data/adb/modules
+
+set_perm $zipp 0 0 0755
+set_perm $zipa 0 0 0755
+
+echo " 
+█▀▄ █░█ ▄▀█ █░░
+█▄▀ █▄█ █▀█ █▄▄
+
+█▀ ▀█▀ ▄▀█ ▀█▀ █░█ █▀
+▄█ ░█░ █▀█ ░█░ █▄█ ▄█
+
+█▄▄ ▄▀█ █▀█
+█▄█ █▀█ █▀▄ 
+
+- by #DsbTeam // @DualstatusbarDSB
+
+Recommended to use @dsbaddons to change styles and colors
+Bugs? Suggestions? Questions? Reach out on support group
+Support Group - @dualstatusbar on telegram  "
+
+
+if [ -f "$spath/SystemUI.apk" ]; then
+mkdir -p $MODPATH/jai
+cp -f $spath/SystemUI.apk $MODPATH/jai/
+ui_print " " 
+ui_print " Processing..... "
+else
+ui_print " This Looks like a non supported Rom..."
+ui_print " Report in support group "
+ui_print " Note : Only Aosp A11+ is Supported "
+remove
+exit 1
+fi
+
+cd $MODPATH/substratumXML/SystemUI/
+$zipp -qq -r $file *
+
+cd $MODPATH/utils/jairaj1/SystemUI/
+$zipp -qq -r $file *
+
+mkdir -p $apath
+$zipa -f 4 $file $apath/SystemUI.apk
+
+if [ $JDSB = true ] ; then
+mkdir -p $MODPATH/$spath
+$zipa -f 4 $file $MODPATH/$spath/SystemUI.apk
+echo " Applied Style 1 DSB successfully" 
+fi
+
+cd $MODPATH/utils/jairaj2/SystemUI/
+$zipp -qq -r $file *
+
+mkdir -p $bpath
+$zipa -f 4 $file $bpath/SystemUI.apk
+
+if [ $JDSB = false ] ; then
+mkdir -p $MODPATH/$spath
+$zipa -f 4 $file $MODPATH/$spath/SystemUI.apk
+echo " Applied Style 2 DSB successfully" 
+fi
+
+rm -r /$mp/*/$spath/SystemUI.apk
+rm -r $MODPATH/jai/
+rm -r $MODPATH/utils/
+rm -r $MODPATH/subs_list.sh
+rm -r $MODPATH/substratumXML
+echo " " 
+
+echo " Done..." 
+echo " Reboot to apply changes" 
+echo " " 
+
+exit 0
